@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="chat-fullscreen">
+    <div id="chatbox" class="chat-box"></div>
+
+    <div class="chat-input-area">
+      <input type="text" id="message" placeholder="Digite sua pergunta..." autocomplete="off">
+      <button id="sendBtn">Enviar</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
