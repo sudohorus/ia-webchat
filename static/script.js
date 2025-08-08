@@ -14,7 +14,7 @@ async function sendMessage() {
   const chatbox = document.getElementById("chatbox");
 
   const botBubble = document.createElement("div");
-  botBubble.className = "message bot";
+  botBubble.className = "message bot assistant-message";
   chatbox.appendChild(botBubble);
   chatbox.scrollTop = chatbox.scrollHeight;
 
@@ -29,17 +29,34 @@ async function sendMessage() {
     dotCount = dotCount === 3 ? 1 : dotCount + 1;
   }, 400);
 
-  const response = await fetch("/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
+  const startTime = Date.now();
 
-  clearInterval(typingInterval);
-  loadingDots.remove();
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
 
-  const data = await response.json();
-  typeWriter(botBubble, marked.parse(data.reply));
+    clearInterval(typingInterval);
+    loadingDots.remove();
+
+    const data = await response.json();
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+    typeWriter(botBubble, marked.parse(data.reply));
+
+    const timeTag = document.createElement("div");
+    timeTag.className = "response-time";
+    timeTag.textContent = `⏱ ${elapsed}s`;
+    chatbox.appendChild(timeTag);
+
+    typeWriter(botBubble, marked.parse(finalContent));
+  } catch (error) {
+    clearInterval(typingInterval);
+    loadingDots.remove();
+    botBubble.innerText = "Erro ao se comunicar com a IA.";
+    console.error(error);
+  }
 }
 
 function appendMessage(sender, text, role) {
@@ -72,3 +89,33 @@ function typeWriter(element, html) {
   }, interval);
 }
 
+// Botão de reset de memória
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "Reset";
+resetBtn.style.position = "absolute";
+resetBtn.style.top = "12px";
+resetBtn.style.left = "12px";
+resetBtn.style.zIndex = "100";
+resetBtn.style.padding = "8px 12px";
+resetBtn.style.background = "#4c8eda";
+resetBtn.style.color = "#fff";
+resetBtn.style.border = "none";
+resetBtn.style.borderRadius = "6px";
+resetBtn.style.cursor = "pointer";
+resetBtn.style.fontSize = "14px";
+resetBtn.style.transition = "background 0.3s";
+resetBtn.onmouseenter = () => resetBtn.style.background = "#3a74b5";
+resetBtn.onmouseleave = () => resetBtn.style.background = "#4c8eda";
+
+resetBtn.addEventListener("click", () => {
+  fetch("/reset", { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("chatbox").innerHTML = "";
+      const botResetMsg = document.createElement("div");
+      botResetMsg.className = "message bot";
+      document.getElementById("chatbox").appendChild(botResetMsg);
+    });
+});
+
+document.body.appendChild(resetBtn);
